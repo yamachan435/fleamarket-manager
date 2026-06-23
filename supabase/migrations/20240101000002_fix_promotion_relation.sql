@@ -1,15 +1,7 @@
 -- Fix: Make promotion 1:1 with product by adding product_id to promotions table
 
--- Create promotions table if it doesn't exist (for fresh installs or if initial schema wasn't run)
-CREATE TABLE IF NOT EXISTS promotions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  standard_price INTEGER NOT NULL,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
+-- Add product_id column to promotions table if it doesn't exist
+ALTER TABLE promotions ADD COLUMN IF NOT EXISTS product_id UUID REFERENCES products(id) ON DELETE CASCADE;
 
 -- Create unique index for 1:1 relationship
 CREATE UNIQUE INDEX IF NOT EXISTS idx_promotions_product_id ON promotions(product_id);
