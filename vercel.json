@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["hnd1"],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
+    "GOOGLE_OAUTH_CLIENT_ID": "@google_oauth_client_id",
+    "GOOGLE_OAUTH_CLIENT_SECRET": "@google_oauth_client_secret",
+    "GOOGLE_OAUTH_REDIRECT_URI": "@google_oauth_redirect_uri",
+    "GOOGLE_DRIVE_FOLDER_ID": "@google_drive_folder_id"
+  }
+}
