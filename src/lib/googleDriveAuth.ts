@@ -57,14 +57,18 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenInf
     }
 
     const oauth2Client = new OAuth2Client(clientId, clientSecret)
+    oauth2Client.setCredentials({ refresh_token: refreshToken })
 
-    const refreshResponse = await oauth2Client.refreshAccessToken({
-      refresh_token: refreshToken,
-    } as any) as any
+    const refreshResponse = await oauth2Client.refreshAccessToken()
+
+    if (!refreshResponse) {
+      console.error('No response from refresh token request')
+      return null
+    }
 
     const credentials = refreshResponse.credentials || refreshResponse
 
-    if (!credentials.access_token) {
+    if (!credentials || !credentials.access_token) {
       console.error('No access token in refresh response')
       return null
     }
@@ -72,7 +76,11 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenInf
     const newToken: TokenInfo = {
       access_token: credentials.access_token,
       refresh_token: credentials.refresh_token || refreshToken,
-      expiry_date: credentials.expiry_date ? credentials.expiry_date.getTime() : null,
+      expiry_date: credentials.expiry_date ? 
+        (typeof credentials.expiry_date === 'number' ? 
+          credentials.expiry_date : 
+          new Date(credentials.expiry_date).getTime()) : 
+        null,
       scope: credentials.scope || null,
       token_type: credentials.token_type || 'Bearer',
     }
@@ -125,6 +133,7 @@ export async function saveTokenToDb(token: TokenInfo): Promise<boolean> {
  */
 export async function getValidAccessToken(): Promise<string | null> {
   try {
+    console.log('=== getValidAccessToken called ===')
     const token = await getTokenFromDb()
 
     if (!token) {
@@ -132,10 +141,18 @@ export async function getValidAccessToken(): Promise<string | null> {
       return null
     }
 
+    console.log('Token expiry_date:', token.expiry_date)
+    console.log('Token refresh_token:', token.refresh_token ? 'exists' : 'null')
+
     // トークンの有効期限をチェック（5分のマージンを持つ）
     const now = Date.now()
     const expiryTime = token.expiry_date || 0
     const margin = 5 * 60 * 1000 // 5分
+
+    console.log('Current time:', now)
+    console.log('Expiry time:', expiryTime)
+    console.log('Time difference:', expiryTime - now)
+    console.log('Margin:', margin)
 
     if (expiryTime - now > margin) {
       // トークンはまだ有効
