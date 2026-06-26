@@ -12,6 +12,7 @@ export default function ProductRegistration() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
+  const [formKey, setFormKey] = useState(0)
 
   const addImageInput = () => {
     const newId = Date.now().toString()
@@ -110,7 +111,7 @@ export default function ProductRegistration() {
       // 3. 成功
       setProductName('')
       setImageInputs([{ id: '1', file: null }])
-      alert(`商品を登録しました（商品番号: ${String(product.product_number).padStart(4, '0')}）`)
+      setFormKey(prev => prev + 1)
 
     } catch (error) {
       console.error('Error:', error)
@@ -124,7 +125,7 @@ export default function ProductRegistration() {
     <div>
       <h2 className="text-2xl font-bold mb-4">商品登録</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
         {/* 商品名入力 */}
         <div>
           <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -151,6 +152,7 @@ export default function ProductRegistration() {
           {imageInputs.map((input, index) => (
             <div key={input.id} className="flex gap-2 mb-2">
               <input
+                key={`${input.id}-${formKey}`}
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleFileChange(input.id, e)}

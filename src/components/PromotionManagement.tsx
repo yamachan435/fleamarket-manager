@@ -4,18 +4,26 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Promotion, Product } from '@/types'
+import { useSearchParams } from 'next/navigation'
 
 export default function PromotionManagement() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [selectedProductId, setSelectedProductId] = useState('')
+  const searchParams = useSearchParams()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [standardPrice, setStandardPrice] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isCompleteChecked, setIsCompleteChecked] = useState(false)
 
   useEffect(() => {
+    // Get productId from URL params
+    const productId = searchParams.get('productId')
+    if (productId) {
+      setSelectedProductId(productId)
+    }
     loadInitialData()
   }, [])
 
@@ -58,6 +66,12 @@ export default function PromotionManagement() {
     e.preventDefault()
     if (!selectedProductId || !title.trim() || !description.trim() || !standardPrice) return
 
+    // Validate title length (max 40 characters)
+    if (title.length > 40) {
+      alert('タイトルは40文字以内で入力してください')
+      return
+    }
+
     setLoading(true)
 
     if (editingId) {
@@ -97,26 +111,28 @@ export default function PromotionManagement() {
       }
     }
 
-    setLoading(false)
-  }
+    // If completion checkbox is checked, update product status
+    if (isCompleteChecked && selectedProductId) {
+      const { error: statusError } = await (supabase as any)
+        .from('products')
+        .update({ status: '出品中' })
+        .eq('id', selectedProductId)
 
-  const handleCompletePreparation = async (productId: string) => {
-    const { error } = await (supabase as any)
-      .from('products')
-      .update({ status: '出品中' })
-      .eq('id', productId)
-
-    if (error) {
-      console.error('Error updating status:', error)
-      alert('状態の更新に失敗しました')
-    } else {
-      setProducts(products.filter(p => p.id !== productId))
-      setSelectedProductId('')
-      setEditingId(null)
-      setTitle('')
-      setDescription('')
-      setStandardPrice('')
+      if (statusError) {
+        console.error('Error updating status:', statusError)
+        alert('状態の更新に失敗しました')
+      } else {
+        setProducts(products.filter(p => p.id !== selectedProductId))
+        setSelectedProductId('')
+        setEditingId(null)
+        setTitle('')
+        setDescription('')
+        setStandardPrice('')
+        setIsCompleteChecked(false)
+      }
     }
+
+    setLoading(false)
   }
 
   const resetForm = () => {
@@ -125,29 +141,12 @@ export default function PromotionManagement() {
     setTitle('')
     setDescription('')
     setStandardPrice('')
+    setIsCompleteChecked(false)
   }
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">販売準備</h2>
-
-      {/* Preparation Complete Checkbox */}
-      {selectedProductId && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              onChange={(e) => {
-                if (e.target.checked) {
-                  handleCompletePreparation(selectedProductId)
-                }
-              }}
-              className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-            />
-            <span className="text-sm font-medium text-gray-700">準備完了</span>
-          </label>
-        </div>
-      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
@@ -165,7 +164,7 @@ export default function PromotionManagement() {
             <option value="">商品を選択してください</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.name}
+                {String(product.product_number).padStart(4, '0')} - {product.name}
               </option>
             ))}
           </select>
@@ -215,6 +214,22 @@ export default function PromotionManagement() {
             required
           />
         </div>
+
+        {/* Preparation Complete Checkbox */}
+        {selectedProductId && (
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="completeCheck"
+              checked={isCompleteChecked}
+              onChange={(e) => setIsCompleteChecked(e.target.checked)}
+              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+            />
+            <label htmlFor="completeCheck" className="text-sm text-gray-700">
+              準備完了
+            </label>
+          </div>
+        )}
 
         <div className="flex gap-2">
           <button

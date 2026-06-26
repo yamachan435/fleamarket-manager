@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ProductRegistration from '@/components/ProductRegistration'
 import ProductManagement from '@/components/ProductManagement'
 import PromotionManagement from '@/components/PromotionManagement'
@@ -13,7 +14,10 @@ import TransactionComplete from '@/components/TransactionComplete'
 type Tab = 'registration' | 'products' | 'promotions' | 'listings' | 'transactions' | 'transactions-complete'
 
 export default function Home() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>('registration')
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const tabs = [
@@ -24,6 +28,27 @@ export default function Home() {
     { id: 'transactions' as Tab, label: '取引' },
     { id: 'transactions-complete' as Tab, label: '取引完了' },
   ]
+
+  // Handle browser back/forward button
+  useEffect(() => {
+    const tab = searchParams.get('tab') as Tab | null
+    const productId = searchParams.get('productId')
+    if (tab && tabs.some(t => t.id === tab)) {
+      setActiveTab(tab)
+      if (productId) {
+        setSelectedProductId(productId)
+      }
+    }
+  }, [searchParams])
+
+  const handleTabChange = (tabId: Tab) => {
+    setActiveTab(tabId)
+    if (selectedProductId) {
+      router.push(`?tab=${tabId}&productId=${selectedProductId}`, { scroll: false })
+    } else {
+      router.push(`?tab=${tabId}`, { scroll: false })
+    }
+  }
 
   return (
     <main className="min-h-screen p-4 md:p-8">
@@ -45,7 +70,7 @@ export default function Home() {
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id)
+                  handleTabChange(tab.id)
                   setIsMenuOpen(false)
                 }}
                 className={`px-4 py-3 rounded-lg font-medium transition-colors ${

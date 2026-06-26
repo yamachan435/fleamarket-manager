@@ -104,19 +104,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // アップロードしたファイルを公開設定に（エラーが発生しても続行）
-    try {
-      await drive.permissions.create({
-        fileId: driveFile.id,
-        requestBody: {
-          role: 'reader',
-          type: 'anyone',
-        },
-        supportsAllDrives: true,
-      })
-    } catch (permError) {
-      console.warn('Failed to set public permission:', permError)
-      // 権限設定に失敗してもアップロード自体は成功なので続行
+    // アップロードしたファイルを公開設定に
+    const permError = await drive.permissions.create({
+      fileId: driveFile.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+      supportsAllDrives: true,
+    }).catch(err => err)
+
+    if (permError instanceof Error) {
+      console.error('Failed to set public permission:', permError)
+      return NextResponse.json(
+        { error: 'ファイルの公開設定に失敗しました', details: permError.message },
+        { status: 500 }
+      )
     }
 
     // Google Driveの画像を直接表示できるURLを生成

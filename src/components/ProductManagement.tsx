@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { Product, ProductImage, Promotion, ListingWithDetails } from '@/types'
 import { useRouter } from 'next/navigation'
 
+type StatusFilter = 'all' | '準備中' | '出品中' | '販売中' | '取引中' | '完了'
+
 export default function ProductManagement() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -13,6 +15,7 @@ export default function ProductManagement() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [listings, setListings] = useState<ListingWithDetails[]>([])
   const [showDetail, setShowDetail] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const router = useRouter()
 
   useEffect(() => {
@@ -21,10 +24,16 @@ export default function ProductManagement() {
 
   const loadProducts = async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    let query = supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false })
+
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error loading products:', error)
@@ -34,23 +43,22 @@ export default function ProductManagement() {
     setLoading(false)
   }
 
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm('この商品を削除しますか？')) return
+  useEffect(() => {
+    loadProducts()
+  }, [statusFilter])
 
-    const { error } = await (supabase as any)
-      .from('products')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting product:', error)
-      alert('商品の削除に失敗しました')
-    } else {
-      setProducts(products.filter(p => p.id !== id))
-      if (showDetail) {
-        setShowDetail(false)
-        setSelectedProduct(null)
-      }
+  const handleStatusClick = (product: Product) => {
+    switch (product.status) {
+      case '準備中':
+        router.push('/?tab=promotions&productId=' + product.id)
+        break
+      case '出品中':
+      case '販売中':
+        router.push('/?tab=listings&productId=' + product.id)
+        break
+      default:
+        // 取引中、完了は遷移しない
+        break
     }
   }
 
@@ -110,14 +118,18 @@ export default function ProductManagement() {
             <h3 className="text-xl font-bold mb-4">{selectedProduct.name}</h3>
             
             <div className="mb-4">
-              <span className={`text-sm rounded-md px-3 py-1 ${getStatusColor(selectedProduct.status)}`}>
+              <button
+                onClick={() => handleStatusClick(selectedProduct)}
+                className={`text-sm rounded-md px-3 py-1 ${getStatusColor(selectedProduct.status)} hover:opacity-80 transition-opacity`}
+                title="クリックして移動"
+              >
                 {selectedProduct.status}
-              </span>
+              </button>
             </div>
 
             <div className="mb-6">
               <h4 className="text-lg font-semibold mb-2">商品番号</h4>
-              <p className="text-gray-700">{String(selectedProduct.product_number).padStart(4, '0')}</p>
+              <p className="text-gray-700 font-mono text-lg">{String(selectedProduct.product_number).padStart(4, '0')}</p>
             </div>
 
             {/* Images */}
@@ -126,12 +138,19 @@ export default function ProductManagement() {
                 <h4 className="text-lg font-semibold mb-2">画像</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {images.map((image) => (
-                    <img
+                    <a
                       key={image.id}
-                      src={image.drive_url}
-                      alt={selectedProduct.name}
-                      className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                    />
+                      href={`https://drive.google.com/file/d/${image.drive_file_id}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img
+                        src={image.drive_url}
+                        alt={selectedProduct.name}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition-opacity cursor-pointer"
+                      />
+                    </a>
                   ))}
                 </div>
               </div>
@@ -188,16 +207,91 @@ export default function ProductManagement() {
 
             <div className="flex gap-2">
               <button
-                onClick={() => handleDeleteProduct(selectedProduct.id)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => {
+                  setShowDetail(false)
+                  setSelectedProduct(null)
+                  setImages([])
+                  setPromotions([])
+                  setListings([])
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
               >
-                削除
+                戻る
               </button>
             </div>
           </div>
         </div>
-      ) : (
+        ) : (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
+          {/* Status Filter */}
+          <div className="p-4 bg-gray-50 border-b border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ステータスで絞り込み
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                すべて
+              </button>
+              <button
+                onClick={() => setStatusFilter('準備中')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === '準備中'
+                    ? 'bg-gray-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                準備中
+              </button>
+              <button
+                onClick={() => setStatusFilter('出品中')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === '出品中'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                出品中
+              </button>
+              <button
+                onClick={() => setStatusFilter('販売中')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === '販売中'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                販売中
+              </button>
+              <button
+                onClick={() => setStatusFilter('取引中')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === '取引中'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                取引中
+              </button>
+              <button
+                onClick={() => setStatusFilter('完了')}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  statusFilter === '完了'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                完了
+              </button>
+            </div>
+          </div>
+
           {loading ? (
             <p className="text-center text-gray-500 py-8">読み込み中...</p>
           ) : products.length === 0 ? (
@@ -207,16 +301,13 @@ export default function ProductManagement() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    商品番号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     商品名
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     状態
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    登録日
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
                   </th>
                 </tr>
               </thead>
@@ -228,6 +319,11 @@ export default function ProductManagement() {
                     className="hover:bg-gray-50 cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 font-mono">
+                        {String(product.product_number).padStart(4, '0')}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {product.name}
                       </div>
@@ -236,20 +332,6 @@ export default function ProductManagement() {
                       <span className={`text-sm rounded-md px-3 py-1 ${getStatusColor(product.status)}`}>
                         {product.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(product.created_at).toLocaleDateString('ja-JP')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteProduct(product.id)
-                        }}
-                        className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50"
-                      >
-                        削除
-                      </button>
                     </td>
                   </tr>
                 ))}
