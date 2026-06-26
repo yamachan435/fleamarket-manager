@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ProductRegistration from '@/components/ProductRegistration'
 import ProductManagement from '@/components/ProductManagement'
@@ -13,7 +13,7 @@ import TransactionComplete from '@/components/TransactionComplete'
 
 type Tab = 'registration' | 'products' | 'promotions' | 'listings' | 'transactions' | 'transactions-complete'
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>('registration')
@@ -96,5 +96,13 @@ export default function Home() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen p-4 md:p-8"><div className="max-w-7xl mx-auto"><div className="bg-white rounded-lg shadow-md p-6"><p>Loading...</p></div></div></div>}>
+      <HomeContent />
+    </Suspense>
   )
 }
