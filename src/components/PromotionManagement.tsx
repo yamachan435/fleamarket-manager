@@ -146,7 +146,7 @@ export default function PromotionManagement() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">販売準備</h2>
+      <h2 className="text-xl font-bold mb-3">販売準備</h2>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
@@ -193,7 +193,7 @@ export default function PromotionManagement() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="説明文を入力"
-            rows={4}
+            rows={2}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
             required

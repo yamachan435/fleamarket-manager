@@ -161,7 +161,7 @@ export default function ListingManagement() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">出品</h2>
+      <h2 className="text-xl font-bold mb-3">出品</h2>
 
       {/* Platform Selection */}
       <div className="mb-6">
@@ -219,7 +219,7 @@ export default function ListingManagement() {
             </div>
             <div className="flex items-start gap-3">
               <span className="text-sm text-gray-700 whitespace-nowrap">説明:</span>
-              <span className="text-sm text-gray-700 flex-1 break-all">{selectedPromotion.description}</span>
+              <span className="text-sm text-gray-700 flex-1 break-all line-clamp-3">{selectedPromotion.description}</span>
               <button
                 onClick={() => copyToClipboard(selectedPromotion.description)}
                 className="px-3 py-2 text-xs bg-white hover:bg-gray-100 border border-gray-300 rounded whitespace-nowrap"

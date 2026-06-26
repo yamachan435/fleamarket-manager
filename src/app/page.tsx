@@ -51,10 +51,10 @@ function HomeContent() {
   }
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
+    <main className="min-h-screen p-2 md:p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">フリマ管理アプリ</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl md:text-2xl font-bold">フリマ管理アプリ</h1>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden px-4 py-2 bg-gray-200 rounded-lg"
@@ -73,7 +73,7 @@ function HomeContent() {
                   handleTabChange(tab.id)
                   setIsMenuOpen(false)
                 }}
-                className={`px-4 py-3 rounded-lg font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -86,7 +86,7 @@ function HomeContent() {
         </nav>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-3 md:p-4">
           {activeTab === 'registration' && <ProductRegistration />}
           {activeTab === 'products' && <ProductManagement />}
           {activeTab === 'promotions' && <PromotionManagement />}

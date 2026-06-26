@@ -97,7 +97,7 @@ export default function ProductManagement() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">商品管理</h2>
+      <h2 className="text-xl font-bold mb-3">商品管理</h2>
 
       {showDetail && selectedProduct ? (
         <div>
@@ -224,14 +224,11 @@ export default function ProductManagement() {
         ) : (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           {/* Status Filter */}
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ステータスで絞り込み
-            </label>
-            <div className="flex flex-wrap gap-2">
+          <div className="p-2 sm:p-3 bg-gray-50 border-b border-gray-200">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -241,7 +238,7 @@ export default function ProductManagement() {
               </button>
               <button
                 onClick={() => setStatusFilter('準備中')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === '準備中'
                     ? 'bg-gray-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -251,7 +248,7 @@ export default function ProductManagement() {
               </button>
               <button
                 onClick={() => setStatusFilter('出品中')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === '出品中'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -261,7 +258,7 @@ export default function ProductManagement() {
               </button>
               <button
                 onClick={() => setStatusFilter('販売中')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === '販売中'
                     ? 'bg-green-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -271,7 +268,7 @@ export default function ProductManagement() {
               </button>
               <button
                 onClick={() => setStatusFilter('取引中')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === '取引中'
                     ? 'bg-yellow-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -281,7 +278,7 @@ export default function ProductManagement() {
               </button>
               <button
                 onClick={() => setStatusFilter('完了')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                className={`px-2 py-0.5 text-xs rounded-lg transition-colors ${
                   statusFilter === '完了'
                     ? 'bg-purple-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -297,16 +294,16 @@ export default function ProductManagement() {
           ) : products.length === 0 ? (
             <p className="text-center text-gray-500 py-8">商品がありません</p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    商品番号
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto">
+                    番号
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-[120px] sm:max-w-none">
                     商品名
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto whitespace-nowrap">
                     状態
                   </th>
                 </tr>
@@ -318,18 +315,18 @@ export default function ProductManagement() {
                     onClick={() => handleProductClick(product)}
                     className="hover:bg-gray-50 cursor-pointer"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 font-mono">
+                    <td className="px-2 sm:px-4 py-3 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 font-mono">
                         {String(product.product_number).padStart(4, '0')}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                    <td className="px-2 sm:px-4 py-3 max-w-[120px] sm:max-w-none">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                         {product.name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm rounded-md px-3 py-1 ${getStatusColor(product.status)}`}>
+                    <td className="px-2 sm:px-4 py-3 whitespace-nowrap">
+                      <span className={`text-xs rounded-md px-2 py-0.5 ${getStatusColor(product.status)}`}>
                         {product.status}
                       </span>
                     </td>
