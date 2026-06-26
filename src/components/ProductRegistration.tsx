@@ -13,6 +13,7 @@ export default function ProductRegistration() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
   const [formKey, setFormKey] = useState(0)
+  const [successProduct, setSuccessProduct] = useState<any>(null)
 
   const addImageInput = () => {
     const newId = Date.now().toString()
@@ -109,9 +110,15 @@ export default function ProductRegistration() {
       }
 
       // 3. 成功
+      setSuccessProduct(product)
       setProductName('')
       setImageInputs([{ id: '1', file: null }])
       setFormKey(prev => prev + 1)
+
+      // 3秒後に成功メッセージを非表示
+      setTimeout(() => {
+        setSuccessProduct(null)
+      }, 3000)
 
     } catch (error) {
       console.error('Error:', error)
@@ -124,6 +131,13 @@ export default function ProductRegistration() {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">商品登録</h2>
+
+      {/* 登録完了メッセージ */}
+      {successProduct && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          登録完了（商品ID: {String(successProduct.product_number).padStart(4, '0')}）
+        </div>
+      )}
 
       <form key={formKey} onSubmit={handleSubmit} className="space-y-4">
         {/* 商品名入力 */}
