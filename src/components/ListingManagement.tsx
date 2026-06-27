@@ -224,7 +224,7 @@ export default function ListingManagement() {
               <span className="text-sm text-gray-700 whitespace-nowrap">説明:</span>
               <span className="text-sm text-gray-700 flex-1 break-all line-clamp-3">{selectedPromotion.description}</span>
               <button
-                onClick={() => copyToClipboard(selectedPromotion.description)}
+                onClick={() => copyToClipboard(`${selectedPromotion.description}\n\n【${String(selectedProduct.product_number).padStart(4, '0')}】`)}
                 className="px-3 py-2 text-xs bg-white hover:bg-gray-100 border border-gray-300 rounded whitespace-nowrap"
               >
                 コピー

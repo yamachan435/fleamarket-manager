@@ -16,6 +16,9 @@ export default function ProductManagement() {
   const [listings, setListings] = useState<ListingWithDetails[]>([])
   const [showDetail, setShowDetail] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [includeCompleted, setIncludeCompleted] = useState(false)
+  const [listingCounts, setListingCounts] = useState<Record<string, number>>({})
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const isNavigatingInternal = useRef(false)
@@ -70,6 +73,8 @@ export default function ProductManagement() {
 
     if (statusFilter !== 'all') {
       query = query.eq('status', statusFilter)
+    } else if (!includeCompleted) {
+      query = query.neq('status', '完了')
     }
 
     const { data, error } = await query
@@ -79,12 +84,28 @@ export default function ProductManagement() {
     } else {
       setProducts(data || [])
     }
+
+    // Fetch listing counts
+    const productIds = (data || []).map((p: Product) => p.id)
+    if (productIds.length > 0) {
+      const { data: countsData } = await (supabase as any)
+        .from('listings')
+        .select('product_id')
+        .in('product_id', productIds)
+      const counts: Record<string, number> = {}
+      ;(countsData || []).forEach((row: { product_id: string }) => {
+        counts[row.product_id] = (counts[row.product_id] || 0) + 1
+      })
+      setListingCounts(counts)
+    } else {
+      setListingCounts({})
+    }
     setLoading(false)
   }
 
   useEffect(() => {
     loadProducts()
-  }, [statusFilter])
+  }, [statusFilter, includeCompleted])
 
   const handleStatusClick = (product: Product) => {
     switch (product.status) {
@@ -317,7 +338,19 @@ export default function ProductManagement() {
               >
                 完了
               </button>
+              <label className="flex items-center gap-1 ml-auto">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-xs text-gray-600">完了を含む</span>
+              </label>
             </div>
+          </div>
+          <div className="text-sm text-gray-500 mb-2">
+            表示中: {products.length}件
           </div>
 
           {loading ? (
@@ -336,6 +369,9 @@ export default function ProductManagement() {
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto whitespace-nowrap">
                     状態
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto whitespace-nowrap">
+                    出品
                   </th>
                 </tr>
               </thead>
@@ -359,6 +395,11 @@ export default function ProductManagement() {
                     <td className="px-2 sm:px-4 py-3 whitespace-nowrap">
                       <span className={`text-xs rounded-md px-2 py-0.5 ${getStatusColor(product.status)}`}>
                         {product.status}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-right">
+                      <span className="text-xs sm:text-sm text-gray-900 font-mono">
+                        {listingCounts[product.id] ?? 0}
                       </span>
                     </td>
                   </tr>
