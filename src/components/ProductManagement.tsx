@@ -17,6 +17,8 @@ export default function ProductManagement() {
   const [showDetail, setShowDetail] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [includeCompleted, setIncludeCompleted] = useState(false)
+  const [listingCounts, setListingCounts] = useState<Record<string, number>>({})
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const isNavigatingInternal = useRef(false)
@@ -81,6 +83,22 @@ export default function ProductManagement() {
       console.error('Error loading products:', error)
     } else {
       setProducts(data || [])
+    }
+
+    // Fetch listing counts
+    const productIds = (data || []).map((p: Product) => p.id)
+    if (productIds.length > 0) {
+      const { data: countsData } = await (supabase as any)
+        .from('listings')
+        .select('product_id')
+        .in('product_id', productIds)
+      const counts: Record<string, number> = {}
+      ;(countsData || []).forEach((row: { product_id: string }) => {
+        counts[row.product_id] = (counts[row.product_id] || 0) + 1
+      })
+      setListingCounts(counts)
+    } else {
+      setListingCounts({})
     }
     setLoading(false)
   }
@@ -349,6 +367,9 @@ export default function ProductManagement() {
                   <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto whitespace-nowrap">
                     状態
                   </th>
+                  <th className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-auto whitespace-nowrap">
+                    出品
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -371,6 +392,11 @@ export default function ProductManagement() {
                     <td className="px-2 sm:px-4 py-3 whitespace-nowrap">
                       <span className={`text-xs rounded-md px-2 py-0.5 ${getStatusColor(product.status)}`}>
                         {product.status}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-right">
+                      <span className="text-xs sm:text-sm text-gray-900 font-mono">
+                        {listingCounts[product.id] ?? 0}
                       </span>
                     </td>
                   </tr>
