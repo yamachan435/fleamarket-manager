@@ -91,13 +91,16 @@ export default function ListingManagement() {
 
     setLoading(true)
 
+    // Strip query string from URL before saving
+    const sanitizedUrl = url ? url.split('?')[0] : null
+
     const { data, error } = await (supabase as any)
       .from('listings')
       .insert([{
         product_id: selectedProductId,
         platform,
         price: parseInt(price),
-        url: url || null,
+        url: sanitizedUrl,
       }])
       .select('*, product:products(*)')
       .single()

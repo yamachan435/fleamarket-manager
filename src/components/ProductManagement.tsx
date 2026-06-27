@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Product, ProductImage, Promotion, ListingWithDetails } from '@/types'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type StatusFilter = 'all' | '準備中' | '出品中' | '販売中' | '取引中' | '完了'
 
@@ -17,6 +17,45 @@ export default function ProductManagement() {
   const [showDetail, setShowDetail] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isNavigatingInternal = useRef(false)
+
+  // Handle browser back/forward for product detail
+  useEffect(() => {
+    const productId = searchParams.get('productId')
+    if (productId) {
+      const product = products.find(p => p.id === productId)
+      if (product) {
+        // Use setTimeout to break potential React re-render loop
+        setTimeout(() => {
+          isNavigatingInternal.current = false
+          if (!isNavigatingInternal.current) {
+            setSelectedProduct(product)
+            setShowDetail(true)
+            loadProductDetailData(product)
+          }
+        }, 0)
+      }
+    } else {
+      setShowDetail(false)
+      setSelectedProduct(null)
+      setImages([])
+      setPromotions([])
+      setListings([])
+    }
+  }, [searchParams])
+  
+  const loadProductDetailData = async (product: Product) => {
+    const [imagesRes, promotionsRes, listingsRes] = await Promise.all([
+      (supabase as any).from('product_images').select('*').eq('product_id', product.id).order('display_order', { ascending: true }),
+      (supabase as any).from('promotions').select('*').eq('product_id', product.id),
+      (supabase as any).from('listings').select('*, product:products(*)').eq('product_id', product.id).order('created_at', { ascending: false }),
+    ])
+
+    if (imagesRes.data) setImages(imagesRes.data)
+    if (promotionsRes.data) setPromotions(promotionsRes.data)
+    if (listingsRes.data) setListings(listingsRes.data as ListingWithDetails[])
+  }
 
   useEffect(() => {
     loadProducts()
@@ -63,19 +102,23 @@ export default function ProductManagement() {
   }
 
   const handleProductClick = async (product: Product) => {
+    // Update URL to enable browser back/forward
+    isNavigatingInternal.current = true
+    router.push(`?tab=products&productId=${product.id}`, { scroll: false })
+    
     setSelectedProduct(product)
     setShowDetail(true)
-    
-    // Load related data
-    const [imagesRes, promotionsRes, listingsRes] = await Promise.all([
-      (supabase as any).from('product_images').select('*').eq('product_id', product.id).order('display_order', { ascending: true }),
-      (supabase as any).from('promotions').select('*').eq('product_id', product.id),
-      (supabase as any).from('listings').select('*, product:products(*)').eq('product_id', product.id).order('created_at', { ascending: false }),
-    ])
+    loadProductDetailData(product)
+  }
 
-    if (imagesRes.data) setImages(imagesRes.data)
-    if (promotionsRes.data) setPromotions(promotionsRes.data)
-    if (listingsRes.data) setListings(listingsRes.data as ListingWithDetails[])
+  const handleBackToList = () => {
+    isNavigatingInternal.current = true
+    router.push('?tab=products', { scroll: false })
+    setShowDetail(false)
+    setSelectedProduct(null)
+    setImages([])
+    setPromotions([])
+    setListings([])
   }
 
   const getStatusColor = (status: string) => {
@@ -102,13 +145,7 @@ export default function ProductManagement() {
       {showDetail && selectedProduct ? (
         <div>
           <button
-            onClick={() => {
-              setShowDetail(false)
-              setSelectedProduct(null)
-              setImages([])
-              setPromotions([])
-              setListings([])
-            }}
+            onClick={handleBackToList}
             className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
           >
             ← 戻る
@@ -207,13 +244,7 @@ export default function ProductManagement() {
 
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setShowDetail(false)
-                  setSelectedProduct(null)
-                  setImages([])
-                  setPromotions([])
-                  setListings([])
-                }}
+                onClick={handleBackToList}
                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
               >
                 戻る
