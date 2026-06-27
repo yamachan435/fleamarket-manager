@@ -13,13 +13,16 @@ export async function GET(request: NextRequest) {
 
     if (setError) {
       console.error('Error fetching label_print_sets:', setError)
-      return NextResponse.json({ error: 'Failed to fetch sets' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to fetch sets' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } }
+      )
     }
 
     // セットが存在しない場合は空配列を返す
     const setId = sets?.[0]?.id as string | undefined
     if (!setId) {
-      return NextResponse.json({ data: [] })
+      return NextResponse.json({ data: [] }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     // セットに含まれる商品を取得
@@ -31,12 +34,15 @@ export async function GET(request: NextRequest) {
 
     if (itemsError) {
       console.error('Error fetching label_print_items:', itemsError)
-      return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to fetch items' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } }
+      )
     }
 
     const productIds = ((items || []) as any[]).map(item => item.product_id)
     if (productIds.length === 0) {
-      return NextResponse.json({ data: [] })
+      return NextResponse.json({ data: [] }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     // 商品情報を取得
@@ -48,7 +54,10 @@ export async function GET(request: NextRequest) {
 
     if (productsError) {
       console.error('Error fetching products:', productsError)
-      return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to fetch products' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } }
+      )
     }
 
     // レスポンス形式に変換
@@ -58,9 +67,12 @@ export async function GET(request: NextRequest) {
       store_code: `201${String(product.product_number).padStart(4, '0')}`,
     }))
 
-    return NextResponse.json({ data })
+    return NextResponse.json({ data }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('Unexpected error in label-print API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
+    )
   }
 }
