@@ -349,6 +349,9 @@ export default function ProductManagement() {
               </label>
             </div>
           </div>
+          <div className="text-sm text-gray-500 mb-2">
+            表示中: {products.length}件
+          </div>
 
           {loading ? (
             <p className="text-center text-gray-500 py-8">読み込み中...</p>
