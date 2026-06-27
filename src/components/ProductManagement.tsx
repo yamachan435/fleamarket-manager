@@ -16,6 +16,7 @@ export default function ProductManagement() {
   const [listings, setListings] = useState<ListingWithDetails[]>([])
   const [showDetail, setShowDetail] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [includeCompleted, setIncludeCompleted] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const isNavigatingInternal = useRef(false)
@@ -70,6 +71,8 @@ export default function ProductManagement() {
 
     if (statusFilter !== 'all') {
       query = query.eq('status', statusFilter)
+    } else if (!includeCompleted) {
+      query = query.neq('status', '完了')
     }
 
     const { data, error } = await query
@@ -84,7 +87,7 @@ export default function ProductManagement() {
 
   useEffect(() => {
     loadProducts()
-  }, [statusFilter])
+  }, [statusFilter, includeCompleted])
 
   const handleStatusClick = (product: Product) => {
     switch (product.status) {
@@ -317,6 +320,15 @@ export default function ProductManagement() {
               >
                 完了
               </button>
+              <label className="flex items-center gap-1 ml-auto">
+                <input
+                  type="checkbox"
+                  checked={includeCompleted}
+                  onChange={(e) => setIncludeCompleted(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-xs text-gray-600">完了を含む</span>
+              </label>
             </div>
           </div>
 
