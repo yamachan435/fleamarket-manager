@@ -10,8 +10,9 @@ import PromotionManagement from '@/components/PromotionManagement'
 import ListingManagement from '@/components/ListingManagement'
 import TransactionManagement from '@/components/TransactionManagement'
 import TransactionComplete from '@/components/TransactionComplete'
+import LabelPrintPage from '@/app/label-print/page'
 
-type Tab = 'registration' | 'products' | 'promotions' | 'listings' | 'transactions' | 'transactions-complete'
+type Tab = 'registration' | 'products' | 'promotions' | 'listings' | 'transactions' | 'transactions-complete' | 'label-print'
 
 function HomeContent() {
   const router = useRouter()
@@ -27,6 +28,7 @@ function HomeContent() {
     { id: 'listings' as Tab, label: '出品' },
     { id: 'transactions' as Tab, label: '取引' },
     { id: 'transactions-complete' as Tab, label: '取引完了' },
+    { id: 'label-print' as Tab, label: 'ラベル印刷' },
   ]
 
   // Handle browser back/forward button
@@ -93,6 +95,7 @@ function HomeContent() {
           {activeTab === 'listings' && <ListingManagement />}
           {activeTab === 'transactions' && <TransactionManagement />}
           {activeTab === 'transactions-complete' && <TransactionComplete />}
+          {activeTab === 'label-print' && <LabelPrintPage />}
         </div>
       </div>
     </main>
