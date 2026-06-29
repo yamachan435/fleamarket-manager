@@ -4,6 +4,21 @@ import { supabase } from '@/lib/supabase'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+  // 認証チェック
+  const queryPassword = request.nextUrl.searchParams.get('password')
+  const labelApiPassword = process.env.LABEL_API_PASSWORD
+  const authToken = request.cookies.get('auth_token')?.value
+
+  const isQueryPasswordValid = queryPassword === labelApiPassword
+  const isCookieAuthenticated = authToken === 'authenticated'
+
+  if (!isQueryPasswordValid && !isCookieAuthenticated) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } }
+    )
+  }
+
   try {
     // 最初のセットを取得（なければnull）
     const { data: sets, error: setError } = await (supabase as any)
