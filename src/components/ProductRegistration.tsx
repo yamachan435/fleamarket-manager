@@ -28,9 +28,20 @@ export default function ProductRegistration() {
 
   const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
-    setImageInputs(imageInputs.map(input => 
-      input.id === id ? { ...input, file } : input
-    ))
+    const wasEmpty = imageInputs.find(input => input.id === id)?.file === null
+
+    setImageInputs(prev => {
+      const updated = prev.map(input =>
+        input.id === id ? { ...input, file } : input
+      )
+
+      // 新規にファイルが選択された場合、自動的に次の入力欄を追加
+      if (file && wasEmpty) {
+        return [...updated, { id: Date.now().toString(), file: null }]
+      }
+
+      return updated
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

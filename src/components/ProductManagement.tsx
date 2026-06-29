@@ -142,6 +142,26 @@ export default function ProductManagement() {
     setListings([])
   }
 
+  const handleReEdit = async () => {
+    if (!selectedProduct || selectedProduct.status !== '出品中') return
+    if (!confirm('この商品を再編集しますか？状態が準備中に戻ります。')) return
+
+    setLoading(true)
+    const { error } = await (supabase as any)
+      .from('products')
+      .update({ status: '準備中' })
+      .eq('id', selectedProduct.id)
+
+    if (error) {
+      console.error('Error updating status:', error)
+      alert('状態の更新に失敗しました')
+    } else {
+      setSelectedProduct({ ...selectedProduct, status: '準備中' })
+      router.push('/?tab=promotions&productId=' + selectedProduct.id)
+    }
+    setLoading(false)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case '準備中':
@@ -217,7 +237,18 @@ export default function ProductManagement() {
             {/* Promotion Info */}
             {promotions.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-lg font-semibold mb-2">販促情報</h4>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-lg font-semibold">販促情報</h4>
+                  {selectedProduct?.status === '出品中' && (
+                    <button
+                      onClick={handleReEdit}
+                      disabled={loading}
+                      className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+                    >
+                      再編集する
+                    </button>
+                  )}
+                </div>
                 {promotions.map((promotion) => (
                   <div key={promotion.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h5 className="font-medium text-gray-900">{promotion.title}</h5>
